@@ -15,7 +15,13 @@ jobs:
       - name: Prepare sources
         run: |
           set -e
-          if [ ! -d app ] && [ -f KoiTerm-src.zip ]; then unzip -q KoiTerm-src.zip; fi
+          if [ ! -d app ] && [ -f KoiTerm-src.zip ]; then
+            unzip -q KoiTerm-src.zip
+            # zip 内 mtime 可能来自"未来"（打包设备时钟偏差），
+            # 会让 ninja 认为 build.ninja 永远 dirty（still dirty after 100 tries）
+            find . -exec touch {} + 2>/dev/null || true
+            echo "mtimes normalized"
+          fi
           if [ -d KoiTerm/app ]; then echo "PROJ=KoiTerm" >> "$GITHUB_ENV"; else echo "PROJ=." >> "$GITHUB_ENV"; fi
           echo "project dir -> $(grep ^PROJ "$GITHUB_ENV")"
 
